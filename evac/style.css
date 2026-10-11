@@ -1,0 +1,18 @@
+body { font-family: Arial, sans-serif; margin: 0; background: #f2f2f2; font-size: 14px; }
+.topbar { background: #2c3e50; color: white; padding: 12px 20px; display: flex; justify-content: space-between; }
+.topbar a { color: #ffd; }
+.menu { background: #ddd; padding: 8px 20px; }
+.menu a { margin-right: 18px; color: #222; text-decoration: none; font-weight: bold; }
+.content { padding: 15px 20px; }
+table { border-collapse: collapse; background: white; margin-bottom: 20px; }
+th, td { border: 1px solid #999; padding: 6px 10px; text-align: left; }
+th { background: #e0e0e0; }
+form.box { background: white; border: 1px solid #999; padding: 12px; margin-bottom: 20px; width: 380px; }
+form.box label { display: block; margin-top: 8px; }
+form.box input, form.box select { width: 100%; padding: 4px; box-sizing: border-box; }
+button, input[type=submit] { margin-top: 10px; padding: 5px 14px; }
+.error { background: #fdd; border: 1px solid #c33; padding: 8px; margin-bottom: 12px; }
+.ok { background: #dfd; border: 1px solid #3a3; padding: 8px; margin-bottom: 12px; }
+.card { display: inline-block; background: white; border: 1px solid #999; padding: 12px 22px; margin: 0 10px 10px 0; text-align: center; }
+.card b { font-size: 22px; display: block; }
+.loginbox { width: 320px; margin: 60px auto; }
