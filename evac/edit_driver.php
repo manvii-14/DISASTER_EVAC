@@ -2,7 +2,7 @@
 include "auth.php";
 $page_title = "Edit Driver";
 $msg = "";
-$id = (int)$_GET['id'];
+$id = (int)($_GET['id'] ?? 0);
 
 // UPDATE
 if (isset($_POST['update'])) {
@@ -23,17 +23,86 @@ $d = $stmt->get_result()->fetch_assoc();
 
 include "header.php";
 echo $msg;
+
 if (!$d) {
-    echo "<p>Driver not found.</p>";
+?>
+    <section class="panel">
+        <div class="empty-state">
+            <h3>Driver not found</h3>
+            <p>This driver record doesn't exist or may have been removed.</p>
+            <a href="drivers.php" class="button-link">Back to drivers</a>
+        </div>
+    </section>
+<?php
     include "footer.php";
     exit;
 }
 ?>
-<form method="post" class="box">
-    <label>Name</label><input type="text" name="name" value="<?php echo htmlspecialchars($d['Name']); ?>" required>
-    <label>License number</label><input type="text" name="license" value="<?php echo htmlspecialchars($d['License_No']); ?>" required>
-    <label>Experience (years)</label><input type="number" name="exp" value="<?php echo $d['Experience_Years']; ?>" required>
-    <input type="submit" name="update" value="Update driver">
-</form>
-<a href="drivers.php">Back</a>
+
+<section class="page-intro">
+    <div>
+        <p class="page-eyebrow">TEAM MANAGEMENT</p>
+        <h2>Edit driver details</h2>
+        <p>Update the driver's information and professional experience.</p>
+    </div>
+
+    <div class="page-count">
+        <span>Driver ID</span>
+        <strong>#<?php echo htmlspecialchars((string)$d['Driver_ID']); ?></strong>
+    </div>
+</section>
+
+<section class="panel edit-form-panel">
+    <div class="panel-heading">
+        <div>
+            <h3>Driver information</h3>
+            <p>Make your changes below and save the updated record.</p>
+        </div>
+        <span class="panel-step">EDIT RECORD</span>
+    </div>
+
+    <form method="post" class="box victim-form">
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="edit-driver-name">Full name</label>
+                <input
+                    id="edit-driver-name"
+                    type="text"
+                    name="name"
+                    value="<?php echo htmlspecialchars($d['Name']); ?>"
+                    required
+                >
+            </div>
+
+            <div class="form-field">
+                <label for="edit-driver-license">License number</label>
+                <input
+                    id="edit-driver-license"
+                    type="text"
+                    name="license"
+                    value="<?php echo htmlspecialchars($d['License_No']); ?>"
+                    required
+                >
+            </div>
+
+            <div class="form-field">
+                <label for="edit-driver-exp">Experience (years)</label>
+                <input
+                    id="edit-driver-exp"
+                    type="number"
+                    name="exp"
+                    min="0"
+                    value="<?php echo htmlspecialchars((string)$d['Experience_Years']); ?>"
+                    required
+                >
+            </div>
+        </div>
+
+        <div class="form-actions edit-form-actions">
+            <a href="drivers.php" class="button-link button-secondary">Cancel</a>
+            <input type="submit" name="update" value="Save changes">
+        </div>
+    </form>
+</section>
+
 <?php include "footer.php"; ?>
