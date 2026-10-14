@@ -3,7 +3,7 @@ include "auth.php";
 $page_title = "Transport of Victims";
 $msg = "";
 
-// Calls the stored procedure sp_assign_victim; the trigger checks the rules
+// calls the stored procedure sp_assign_victim; the trigger checks the rules
 if (isset($_POST['assign'])) {
     try {
         $stmt = $conn->prepare("CALL sp_assign_victim(?, ?, ?)");
@@ -16,7 +16,7 @@ if (isset($_POST['assign'])) {
     }
 }
 
-// Calls the stored procedure sp_complete_dispatch
+// calls the stored procedure sp_complete_dispatch
 if (isset($_GET['complete'])) {
     $stmt = $conn->prepare("CALL sp_complete_dispatch(?)");
     $stmt->bind_param("i", $_GET['complete']);
@@ -25,7 +25,7 @@ if (isset($_GET['complete'])) {
     $msg = "<div class='ok'>Dispatch marked as completed.</div>";
 }
 
-// Remove a victim from a transport
+// remove a victim from a transport
 if (isset($_GET['remove_d']) && isset($_GET['remove_v'])) {
     $stmt = $conn->prepare("DELETE FROM Transport WHERE Dispatch_ID = ? AND Victim_ID = ?");
     $stmt->bind_param("ii", $_GET['remove_d'], $_GET['remove_v']);
