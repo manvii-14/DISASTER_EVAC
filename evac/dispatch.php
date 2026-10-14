@@ -32,45 +32,11 @@ if (isset($_GET['delete'])) {
     $msg = "<div class='ok'>Dispatch deleted (its transport records were deleted too).</div>";
 }
 
-include "header.php";
-echo $msg;
 $incidents = $conn->query("SELECT Incident_ID, Incident_Type, Location FROM Incident");
 $vehicles = $conn->query("SELECT Vehicle_ID, Vehicle_Type, Reg_Number FROM Vehicle");
 $drivers = $conn->query("SELECT Driver_ID, Name FROM Driver");
 $routes = $conn->query("SELECT Route_ID, Start_Location, End_Location FROM Route");
-?>
-<form method="post" class="box">
-    <b>New dispatch</b>
-    <label>Incident</label>
-    <select name="incident">
-        <?php while ($r = $incidents->fetch_assoc()) {
-            echo "<option value='" . $r['Incident_ID'] . "'>" . $r['Incident_ID'] . " - " . htmlspecialchars($r['Incident_Type'] . ", " . $r['Location']) . "</option>";
-        } ?>
-    </select>
-    <label>Vehicle</label>
-    <select name="vehicle">
-        <?php while ($r = $vehicles->fetch_assoc()) {
-            echo "<option value='" . $r['Vehicle_ID'] . "'>" . htmlspecialchars($r['Reg_Number'] . " (" . $r['Vehicle_Type'] . ")") . "</option>";
-        } ?>
-    </select>
-    <label>Driver</label>
-    <select name="driver">
-        <?php while ($r = $drivers->fetch_assoc()) {
-            echo "<option value='" . $r['Driver_ID'] . "'>" . htmlspecialchars($r['Name']) . "</option>";
-        } ?>
-    </select>
-    <label>Route</label>
-    <select name="route">
-        <?php while ($r = $routes->fetch_assoc()) {
-            echo "<option value='" . $r['Route_ID'] . "'>" . htmlspecialchars($r['Start_Location'] . " to " . $r['End_Location']) . "</option>";
-        } ?>
-    </select>
-    <input type="submit" name="add" value="Dispatch">
-</form>
 
-<table>
-<tr><th>ID</th><th>Incident</th><th>Vehicle</th><th>Driver</th><th>Route</th><th>Dispatch time</th><th>Arrival</th><th>Status</th><th>Action</th></tr>
-<?php
 $res = $conn->query("SELECT d.*, i.Incident_Type, v.Reg_Number, dr.Name AS Driver_Name, r.Start_Location, r.End_Location
                      FROM Dispatch d
                      JOIN Incident i ON d.Incident_ID = i.Incident_ID
@@ -78,27 +44,155 @@ $res = $conn->query("SELECT d.*, i.Incident_Type, v.Reg_Number, dr.Name AS Drive
                      JOIN Driver dr ON d.Driver_ID = dr.Driver_ID
                      JOIN Route r ON d.Route_ID = r.Route_ID
                      ORDER BY d.Dispatch_ID");
+
 $statuses = ['Dispatched', 'En Route', 'Completed', 'Cancelled'];
-while ($row = $res->fetch_assoc()) {
-    echo "<tr>";
-    echo "<td>" . $row['Dispatch_ID'] . "</td>";
-    echo "<td>" . htmlspecialchars($row['Incident_Type']) . "</td>";
-    echo "<td>" . htmlspecialchars($row['Reg_Number']) . "</td>";
-    echo "<td>" . htmlspecialchars($row['Driver_Name']) . "</td>";
-    echo "<td>" . htmlspecialchars($row['Start_Location'] . " to " . $row['End_Location']) . "</td>";
-    echo "<td>" . $row['Dispatch_Time'] . "</td>";
-    echo "<td>" . ($row['Arrival_Time'] ?? '-') . "</td>";
-    echo "<td><form method='post' style='margin:0'>";
-    echo "<input type='hidden' name='dispatch_id' value='" . $row['Dispatch_ID'] . "'>";
-    echo "<select name='status'>";
-    foreach ($statuses as $s) {
-        $sel = ($s == $row['Status']) ? "selected" : "";
-        echo "<option $sel>$s</option>";
-    }
-    echo "</select> <input type='submit' name='set_status' value='Save' style='margin:0'></form></td>";
-    echo "<td><a href='dispatch.php?delete=" . $row['Dispatch_ID'] . "' onclick=\"return confirm('Delete this dispatch?')\">Delete</a></td>";
-    echo "</tr>";
-}
+
+include "header.php";
 ?>
-</table>
+
+<section class="page-intro">
+    <div>
+        <p class="page-eyebrow">EMERGENCY OPERATIONS</p>
+        <h2>Dispatch management</h2>
+        <p>Coordinate incidents, vehicles, drivers and response routes.</p>
+    </div>
+    <div class="page-count">
+        <span>Total dispatches</span>
+        <strong><?php echo $res->num_rows; ?></strong>
+    </div>
+</section>
+
+<?php echo $msg; ?>
+
+<section class="panel">
+    <div class="panel-heading">
+        <div>
+            <h3>Create a dispatch</h3>
+            <p>Assign an incident, available vehicle, driver and route.</p>
+        </div>
+        <span class="panel-step">NEW DISPATCH</span>
+    </div>
+
+    <form method="post" class="box victim-form">
+        <div class="form-grid">
+            <div class="form-field">
+                <label for="dispatch-incident">Incident</label>
+                <select id="dispatch-incident" name="incident" required>
+                    <?php while ($r = $incidents->fetch_assoc()) { ?>
+                        <option value="<?php echo $r['Incident_ID']; ?>">
+                            <?php echo htmlspecialchars($r['Incident_ID'] . " - " . $r['Incident_Type'] . ", " . $r['Location']); ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </div>
+
+            <div class="form-field">
+                <label for="dispatch-vehicle">Vehicle</label>
+                <select id="dispatch-vehicle" name="vehicle" required>
+                    <?php while ($r = $vehicles->fetch_assoc()) { ?>
+                        <option value="<?php echo $r['Vehicle_ID']; ?>">
+                            <?php echo htmlspecialchars($r['Reg_Number'] . " (" . $r['Vehicle_Type'] . ")"); ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </div>
+
+            <div class="form-field">
+                <label for="dispatch-driver">Driver</label>
+                <select id="dispatch-driver" name="driver" required>
+                    <?php while ($r = $drivers->fetch_assoc()) { ?>
+                        <option value="<?php echo $r['Driver_ID']; ?>">
+                            <?php echo htmlspecialchars($r['Name']); ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </div>
+
+            <div class="form-field">
+                <label for="dispatch-route">Route</label>
+                <select id="dispatch-route" name="route" required>
+                    <?php while ($r = $routes->fetch_assoc()) { ?>
+                        <option value="<?php echo $r['Route_ID']; ?>">
+                            <?php echo htmlspecialchars($r['Start_Location'] . " to " . $r['End_Location']); ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <input type="submit" name="add" value="Create dispatch">
+        </div>
+    </form>
+</section>
+
+<section class="panel">
+    <div class="panel-heading">
+        <div>
+            <h3>Dispatch records</h3>
+            <p>Review assignments, timings and current status. Update status directly below.</p>
+        </div>
+        <span class="record-count"><?php echo $res->num_rows; ?> records</span>
+    </div>
+
+    <div class="table-scroll">
+        <table class="records-table dispatch-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Incident</th>
+                    <th>Vehicle</th>
+                    <th>Driver</th>
+                    <th>Route</th>
+                    <th>Dispatch time</th>
+                    <th>Arrival</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ($res->num_rows > 0) { ?>
+                    <?php while ($row = $res->fetch_assoc()) { ?>
+                        <tr>
+                            <td class="record-id">
+                                <?php echo htmlspecialchars((string)$row['Dispatch_ID']); ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($row['Incident_Type']); ?></td>
+                            <td><?php echo htmlspecialchars($row['Reg_Number']); ?></td>
+                            <td class="person-name"><?php echo htmlspecialchars($row['Driver_Name']); ?></td>
+                            <td><?php echo htmlspecialchars($row['Start_Location'] . " to " . $row['End_Location']); ?></td>
+                            <td class="date-value"><?php echo htmlspecialchars((string)$row['Dispatch_Time']); ?></td>
+                            <td class="date-value"><?php echo htmlspecialchars((string)($row['Arrival_Time'] ?? '-')); ?></td>
+                            <td>
+                                <form method="post" class="status-edit-form">
+                                    <input type="hidden" name="dispatch_id"
+                                           value="<?php echo htmlspecialchars((string)$row['Dispatch_ID']); ?>">
+                                    <select name="status" aria-label="Dispatch status">
+                                        <?php foreach ($statuses as $s) { ?>
+                                            <option value="<?php echo htmlspecialchars($s); ?>"
+                                                <?php echo ($s == $row['Status']) ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($s); ?>
+                                            </option>
+                                        <?php } ?>
+                                    </select>
+                                    <button type="submit" name="set_status" class="small-button">Save</button>
+                                </form>
+                            </td>
+                            <td class="action-cell">
+                                <a class="action-link action-delete"
+                                   href="dispatch.php?delete=<?php echo urlencode((string)$row['Dispatch_ID']); ?>"
+                                   onclick="return confirm('Delete this dispatch?')">Delete</a>
+                            </td>
+                        </tr>
+                    <?php } ?>
+                <?php } else { ?>
+                    <tr>
+                        <td colspan="9" class="empty-table">No dispatches have been created yet.</td>
+                    </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+    </div>
+</section>
+
 <?php include "footer.php"; ?>
